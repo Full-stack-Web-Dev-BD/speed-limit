@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
+import Button from '@material-ui/core/Button';
 import InputBase from '@material-ui/core/InputBase';
 import Badge from '@material-ui/core/Badge';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -14,6 +15,9 @@ import AccountCircle from '@material-ui/icons/AccountCircle';
 import MailIcon from '@material-ui/icons/Mail';
 import NotificationsIcon from '@material-ui/icons/Notifications';
 import MoreIcon from '@material-ui/icons/MoreVert';
+import SpeedIcon from '@material-ui/icons/Speed';
+import AccessibleForwardIcon from '@material-ui/icons/AccessibleForward';
+import { Link } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
   grow: {
@@ -79,14 +83,27 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function HomeNavbar() {
+
+export default function HomeNavbar(props) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+
+  const { currentSpeed, speedLimit } = props;
+
+
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
 
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
-
+  useEffect(() => {
+    if (window.localStorage.getItem('authToken')) {
+      setIsAuthenticated(true)
+    } else {
+      setIsAuthenticated(false)
+    }
+  }, [])
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -115,8 +132,17 @@ export default function HomeNavbar() {
       open={isMenuOpen}
       onClose={handleMenuClose}
     >
-      <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-      <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+      {
+        isAuthenticated ?
+          <>
+            <MenuItem> <Link to="/profile">  Profile </Link> </MenuItem>
+          </> :
+          <>
+            <MenuItem> <Link to="/login">Login </Link> </MenuItem>
+            <MenuItem> <Link to="/sign-up">Sign up </Link> </MenuItem>
+          </>
+
+      }
     </Menu>
   );
 
@@ -173,8 +199,16 @@ export default function HomeNavbar() {
           >
             <MenuIcon />
           </IconButton>
+
           <Typography className={classes.title} variant="h6" noWrap>
-            Speed Limit is (30Km)
+            <Button style={{ color: 'white', marginLeft: '30px' }}>
+              <SpeedIcon title="Current Speed " />  <span style={{ color: 'white', margin: '0 10px' }}>{currentSpeed == null ? 0 : currentSpeed}(Km)</span>
+            </Button>
+          </Typography>
+          <Typography className={classes.title} variant="h6" noWrap>
+            <Button style={{ color: 'white' }}>
+              Max Speed <span style={{ color: 'white', margin: '0 10px' }}> {speedLimit}(KM) </span>
+            </Button>
           </Typography>
           <div className={classes.search}>
             <div className={classes.searchIcon}>

@@ -1,85 +1,46 @@
-var express = require('express');
-var app = express();
-var axios = require('axios');
-var cors = require('cors');
-var bodyParser = require('body-parser');
+const express = require('express');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+const passport=require('passport');
+const cors = require('cors');
+const path = require('path');
+const morgan = require('morgan');
+const app = express();
+const http = require('http').createServer(app);
+const io=require('socket.io')(http)
 
 
 
-app.use(bodyParser.json())
+const port = process.env.PORT || 5000;
+app.use(morgan('dev'))
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 app.use(cors())
-app.use(bodyParser.urlencoded({extended: false}))
+app.use(passport.initialize());
+mongoose.set('useFindAndModify', false);
 
-const PORT = 3005;
-const APIKEY = 'AIzaSyADYWIGFSnn3DHlJblK0hntz5KQiwbD0hk'
+require('./middleware/passport')(passport);
+
+//DB config
+const db = require('./config/keys').mongoURI;
+
+//MongoDB connect
+mongoose
+  .connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('MongoDB connected'))
+  .catch((err) => console.log(err));
 
 
-app.post('/getSpeedLimit',(req,res)=>{
-    let placeId = req.body.placeId;
-    let lat = req.body.lat;
-    let long = req.body.long; 
+//use routes
+app.use('/api/user', require('./routes/usersRoute'))
 
-    let requestApi;
-    if(placeId){
-      requestApi = `https://roads.googleapis.com/v1/speedLimits?placeId=${placeId}&key=${APIKEY}`;
-    }else{
-      requestApi = `https://roads.googleapis.com/v1/speedLimits?path=${lat},${long}&key=${APIKEY}`;
-    }
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static("client/build"));
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "client", "build", "index.html"));
+  });
+}
 
-axios.get(requestApi)
-  .then(function (response) {
-    // handle success
-    let responseData = response['data'];
-    let responseMessage = {
-        "status" : "OK",
-        "data" : responseData['speedLimits']
-    }
-
-    res.send(responseMessage)
-
-  })
-  .catch(function (error) {
-    // handle error
-    let responseData = error['response'];
-    let responseMessage = {
-        "status" : "Error",
-        "data" : responseData['data']['error']['message']
-    }
-
-    res.send(responseMessage)
-  })
+http.listen(port, () => {
+  console.log('server is running on port: ' + port);
 })
-
-app.post('/getPlaceId',(req,res)=>{
-  let lat = req.body.lat;
-  let lang = req.body.lang;
-
-axios.get(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lang}&key=${APIKEY}`)
-.then(function (response) {
-
-  // handle success
-  let responseData = response['data'];
-  let responseMessage = {
-      "status" : "OK",
-      "place_id" : responseData['results'][0]['place_id']
-  }
-
-  res.send(responseMessage)
-
-})
-.catch(function (error) {
-  // handle error
-  let responseData = error['response'];
-  let responseMessage = {
-      "status" : "Error",
-      "data" : responseData['data']['error']['message']
-  }
-
-  res.send(responseMessage)
-})
-})
-
-app.listen(PORT,(err)=>{
-    console.log("The Server running in "+PORT)
-})
-
