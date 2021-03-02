@@ -4,7 +4,6 @@ const bodyParser = require('body-parser');
 const passport=require('passport');
 const cors = require('cors');
 const path = require('path');
-const morgan = require('morgan');
 const app = express();
 const http = require('http').createServer(app);
 const io=require('socket.io')(http)
@@ -12,7 +11,6 @@ const io=require('socket.io')(http)
 
 
 const port = process.env.PORT || 5000;
-app.use(morgan('dev'))
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors())
