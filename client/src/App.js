@@ -7,6 +7,7 @@ import jwt_decode from 'jwt-decode'
 import axios from 'axios'
 import setAuthauthToken from './util/setAuthToken'
 import Profile from './components/Profile'
+import Users from './components/Users'
 const App = () => {
     useEffect(() => {
         if (localStorage.authToken) {
@@ -23,6 +24,7 @@ const App = () => {
                     <Route exact path="/profile" component={Profile} />
                     <Route exact path="/login" component={Login} />
                     <Route exact path="/sign-up" component={Register} />
+                    <Route exact path="/users" component={Users} />
                     <Route exact path="/" component={Map} />
                 </Switch>
             </BrowserRouter>

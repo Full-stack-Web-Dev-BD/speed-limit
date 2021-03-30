@@ -18,7 +18,7 @@ import MoreIcon from '@material-ui/icons/MoreVert';
 import SpeedIcon from '@material-ui/icons/Speed';
 import AccessibleForwardIcon from '@material-ui/icons/AccessibleForward';
 import { Link } from 'react-router-dom';
-
+import jwtDecode from 'jwt-decode'
 const useStyles = makeStyles((theme) => ({
   grow: {
     flexGrow: 1,
@@ -87,7 +87,7 @@ const useStyles = makeStyles((theme) => ({
 export default function HomeNavbar(props) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-
+  const [user, setUser] = useState({})
   const { currentSpeed, speedLimit } = props;
 
 
@@ -100,6 +100,9 @@ export default function HomeNavbar(props) {
   useEffect(() => {
     if (window.localStorage.getItem('authToken')) {
       setIsAuthenticated(true)
+      let jwtToken = window.localStorage.getItem('authToken')
+      let decoded = jwtDecode(jwtToken)
+      setUser(decoded)
     } else {
       setIsAuthenticated(false)
     }
@@ -116,6 +119,11 @@ export default function HomeNavbar(props) {
     setAnchorEl(null);
     handleMobileMenuClose();
   };
+
+  const logout = () => {
+    window.localStorage.removeItem('authToken')
+    window.location.href = '/'
+  }
 
   const handleMobileMenuOpen = (event) => {
     setMobileMoreAnchorEl(event.currentTarget);
@@ -136,6 +144,11 @@ export default function HomeNavbar(props) {
         isAuthenticated ?
           <>
             <MenuItem> <Link to="/profile">  Profile </Link> </MenuItem>
+            {
+              user.user_role == 'admin'
+                ? <MenuItem> <Link to="/users">  Users</Link> </MenuItem> : ''
+            }
+            <MenuItem onClick={logout}>Logout</MenuItem>
           </> :
           <>
             <MenuItem> <Link to="/login">Login </Link> </MenuItem>
@@ -191,15 +204,6 @@ export default function HomeNavbar(props) {
     <div className={classes.grow}>
       <AppBar position="static">
         <Toolbar>
-          <IconButton
-            edge="start"
-            className={classes.menuButton}
-            color="inherit"
-            aria-label="open drawer"
-          >
-            <MenuIcon />
-          </IconButton>
-
           <Typography className={classes.title} variant="h6" noWrap>
             <Button style={{ color: 'white', marginLeft: '30px' }}>
               <SpeedIcon title="Current Speed " />  <span style={{ color: 'white', margin: '0 10px' }}>{currentSpeed == null ? 0 : currentSpeed}(Km)</span>
@@ -225,16 +229,23 @@ export default function HomeNavbar(props) {
           </div>
           <div className={classes.grow} />
           <div className={classes.sectionDesktop}>
-            <IconButton aria-label="show 4 new mails" color="inherit">
-              <Badge badgeContent={4} color="secondary">
-                <MailIcon />
-              </Badge>
-            </IconButton>
-            <IconButton aria-label="show 17 new notifications" color="inherit">
-              <Badge badgeContent={17} color="secondary">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
+            {
+              window.localStorage.getItem('authToken')
+                ?
+                <>
+                  <IconButton aria-label="show 4 new mails" color="inherit">
+                    <Badge badgeContent={4} color="secondary">
+                      <MailIcon />
+                    </Badge>
+                  </IconButton>
+                  <IconButton aria-label="show 17 new notifications" color="inherit">
+                    <Badge badgeContent={17} color="secondary">
+                      <NotificationsIcon />
+                    </Badge>
+                  </IconButton>
+                </> : ''
+            }
+
             <IconButton
               edge="end"
               aria-label="account of current user"
